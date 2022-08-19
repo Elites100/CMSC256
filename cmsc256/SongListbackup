@@ -1,0 +1,262 @@
+package cmsc256;
+import bridges.connect.Bridges;
+import bridges.connect.DataSource;
+import bridges.data_src_dependent.Song;
+import bridges.base.SLelement;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.NoSuchElementException;
+/***********************************************************************************************************************************************************************************
+ * SongList.java
+ ************************************************************************************************************************************************************************************
+ * project three - SongList
+ ************************************************************************************************************************************************************************************
+ * Project description
+ * Songlist with linked list
+ * Kevin Phung
+ * 3/18/2022
+ * CMSC-256
+ *********************************************************************************************************************************/
+
+
+public class SongList implements cmsc256.List<bridges.data_src_dependent.Song> {
+
+    // implementing the list
+    // instance variable of head, tail, current and a int of listsize
+    private   SLelement<Song> head;
+    private   SLelement<Song> tail;
+    private   SLelement<Song> curr;
+    private int listSize;
+
+    // constructors
+    public SongList(){
+        clear();
+        //credentials for bridge
+        Bridges bridges = new Bridges(3, "kevinphung01", "777680704448");
+        DataSource ds = bridges.getDataSource();
+
+        // List of song to be stored
+        ArrayList<Song> songData = null;
+
+        // trying to connect to the bridge and get data
+        try {
+            songData = ds.getSongData();
+        }
+        catch (Exception e) {
+            System.out.println("Unable to connect to Bridges.");
+        }
+        // append all the song data to populate the SLelement<Song>
+        if (songData != null) {
+            for (int i = 0; i < songData.size(); i++) {
+                append(songData.get(i));
+            }
+        }
+
+    }
+
+    /*private void bridge(){
+        //credentials for bridge
+        Bridges bridges = new Bridges(3, "kevinphung01", "777680704448");
+        DataSource ds = bridges.getDataSource();
+
+        // List of song to be stored
+        ArrayList<Song> songData = null;
+
+        // trying to connect to the bridge and get data
+        try {
+            songData = ds.getSongData();
+        }
+        catch (Exception e) {
+            System.out.println("Unable to connect to Bridges.");
+        }
+        // append all the song data to populate the SLelement<Song>
+        for (int i = 0; i < songData.size(); i++) {
+            append(songData.get(i));
+        }
+    }*/
+
+
+    //ignore list size
+    public SongList(int listSize) {
+        this();
+    }
+
+    // remove all element and start anew
+    public void clear(){
+        curr = tail = new SLelement<>((SLelement<Song>) null); // Create trailer
+        head = new  SLelement<Song>(tail);        // Create header
+        listSize = 0;
+    }
+
+    // Insert "it" at current position
+    @Override
+    public boolean insert(Song it) {
+        curr.setNext(new SLelement<>(curr.getValue(), curr.getNext()));
+        curr.setValue(it);
+        if (tail == curr) {
+            tail = curr.getNext();  // New tail
+        }
+        listSize++;
+        return true;
+    }
+
+    // Append "it" to list
+    @Override
+    public boolean append(Song it) {
+        tail.setNext(new SLelement<>(null));
+        tail.setValue(it);
+        tail = tail.getNext();
+        listSize++;
+        return true;
+    }
+
+    // remove and return the current element
+    @Override
+    public Song remove()  {
+        if (curr == tail) {// Nothing to remove
+        return null;
+        }
+
+        Song it = curr.getValue();                  // Remember value
+        curr.setValue(curr.getNext().getValue()); // Pull forward the next element
+        if (curr.getNext() == tail) {
+            tail = curr;   // Removed last, move tail
+        }
+        curr.setNext(curr.getNext().getNext());       // Point around unneeded link
+        listSize--;                             // Decrement element count
+        return it;                              // Return value
+    }
+
+
+    @Override
+    public void moveToStart() {
+        curr = head.getNext(); // Set curr at list start
+    }
+
+    @Override
+    public void moveToEnd() {
+        curr = tail; // Set curr at list end
+    }
+
+    // Move curr one step left; no change if now at front
+    @Override
+    public void prev() {
+        if (head.getNext() == curr) {
+            return; // No previous element
+        }
+        SLelement<Song> temp = head;
+        // March down list until we find the previous element
+        while (temp.getNext() != curr) {
+            temp = temp.getNext();
+        }
+        curr = temp;
+    }
+
+    // Move curr one step right; no change if now at end
+    @Override
+    public void next() {
+        if (curr != tail) {
+            curr = curr.getNext();
+        }
+    }
+
+    @Override
+    public int length() {
+        return listSize;
+    }
+
+    // Return the position of the current element
+    @Override
+    public int currPos() {
+       SLelement<Song> temp = head.getNext();
+        int i;
+        for (i=0; curr != temp; i++) {
+            temp = temp.getNext();
+        }
+        return i;
+    }
+
+    // Move down list to "pos" position
+
+    @Override
+    public boolean moveToPos(int pos) {
+        if ((pos < 0) || (pos > listSize)) {
+            return false;
+        }
+
+        curr = head.getNext();
+        for(int i=0; i<pos; i++) {
+            curr = curr.getNext();
+        }
+        return true;
+    }
+
+    // Return true if current position is at end of the list
+    @Override
+    public boolean isAtEnd() {
+        return curr == tail;
+    }
+
+    // Return current element value. Note that null gets returned if curr is at the tail
+    @Override
+    public Song getValue()  {
+        if (curr == tail) // No current element
+        {
+           return null;
+        }
+        return curr.getValue();
+    }
+
+
+    // method of getting song by the artists
+    public String getSongsByArtist(String artist){
+
+
+        List<Song> songData = (List<Song>) new SongList();
+
+
+        /*for(int i = 0; i < listSize; i++) {
+            if (curr.getValue().getArtist() == artist) {
+                info = "Title: " + curr.getValue().getSongTitle() + " Artist: " + curr.getValue().getArtist() + " Album: " + curr.getValue().getAlbumTitle();
+            }
+
+
+            else {
+                info = "There are no songs by " + artist + " in this playlist";
+            }
+        }*/
+
+
+        //Sort the song titles, artist name, and the song name from the list using a comparator by SongComparator()
+        Collections.sort(songData , new SongComparator());
+        String name = " ";
+        String album = " ";
+        String info = " ";
+
+        // a loop to obtain the song from the songData
+        for(Song overall: songData){
+            if (overall.getArtist().equalsIgnoreCase(artist)) {
+
+                // getting the name of the artists
+                name = overall.getArtist();
+
+                // getting the name of the album
+                album = overall.getAlbumTitle();
+
+                // saving the string info to print
+                info = info + "Title: " + name + " Artist: " + artist + " Album: " + album + "\n";
+            }
+        }
+        // if nothing is in the songData or empty
+        if (info.isEmpty()){
+            return "There are no songs by "+ artist + " in this playlist";
+        }
+        return info;
+
+    }
+
+}
+
+
